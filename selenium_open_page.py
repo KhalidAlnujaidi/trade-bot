@@ -78,11 +78,39 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
 # ────────────────────────────────────────────────────────────────────────────────
 
 def click_period(driver: webdriver.Chrome, period_id: str = "1D") -> None:
-    anchor = WebDriverWait(driver, WAIT_SECS).until(
-        EC.element_to_be_clickable((By.ID, period_id))
-    )
-    anchor.click()
-    print(f"✔ Clicked period button id='{period_id}'.")
+    """
+    Waits for the specified period filter button and clicks it.
+    This version is more robust, using a JavaScript click and adding
+    error handling with a screenshot for debugging.
+
+    Args:
+        driver: The Selenium WebDriver instance.
+        period_id: The ID of the period button to click (e.g., '1D').
+    """
+    try:
+        # Wait for the element to be present in the DOM, which is less strict
+        # than being clickable.
+        print(f"Attempting to click period button with id='{period_id}'...")
+        anchor = WebDriverWait(driver, WAIT_SECS).until(
+            EC.presence_of_element_located((By.ID, period_id))
+        )
+
+        # Use JavaScript to click the element. This can bypass issues where
+        # another element is covering the button, making it unclickable for Selenium.
+        driver.execute_script("arguments[0].click();", anchor)
+        print(f"✔ Clicked period button id='{period_id}'.")
+
+    except TimeoutException:
+        print(f"‼ Timed out waiting for period button with id='{period_id}'. The website may have changed.")
+        
+        # Save a screenshot of the page for manual inspection.
+        # This helps diagnose if the button is missing, has a different ID, or if the page didn't load correctly.
+        screenshot_path = "debug_screenshot.png"
+        driver.save_screenshot(screenshot_path)
+        print(f"  - A screenshot has been saved to '{screenshot_path}' for debugging.")
+        
+        # Re-raise the exception to halt the script, as it cannot proceed.
+        raise
 
 def extract_list_items(driver: webdriver.Chrome) -> List[Dict[str, str]]:
     try:
