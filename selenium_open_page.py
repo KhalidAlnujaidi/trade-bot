@@ -248,11 +248,23 @@ def scrape_article(driver: webdriver.Chrome, article_info: Dict[str, str]) -> No
             dest = DOWNLOAD_DIR / filename
 
             try:
-                # Download the file
-                resp = requests.get(full_url, headers={"User-Agent": USER_AGENT}, timeout=45)
-                resp.raise_for_status()
-                dest.write_bytes(resp.content)
-                print(f"  - Downloaded: {dest}")
+                # Get cookies from the live browser session
+                browser_cookies = driver.get_cookies()
+
+                # Use a session to better mimic a browser, transferring cookies
+                with requests.Session() as session:
+                    for cookie in browser_cookies:
+                        session.cookies.set(cookie['name'], cookie['value'], domain=cookie['domain'])
+
+                    session.headers.update({
+                        "User-Agent": USER_AGENT,
+                        "Referer": article_info["url"],
+                    })
+
+                    resp = session.get(full_url, timeout=45)
+                    resp.raise_for_status()
+                    dest.write_bytes(resp.content)
+                    print(f"  - Downloaded: {dest}")
 
                 # Extract text from the downloaded file
                 file_text = extract_text_from_file(dest)
