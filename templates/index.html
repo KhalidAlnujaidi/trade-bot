@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Stock News Dashboard - Latest Articles{% endblock %}
+
+{% block content %}
+    <div class="search-form">
+        <form method="get" class="form-inline mb-4">
+            <div class="input-group w-100">
+                <input type="text" name="search" class="form-control" placeholder="Search articles..." value="{{ search if search }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="mb-3">
+        <h2>Latest Stock News</h2>
+        {% if search %}
+            <p class="text-muted">Showing results for "{{ search }}" ({{ total }} articles found)</p>
+        {% else %}
+            <p class="text-muted">Total articles: {{ total }}</p>
+        {% endif %}
+    </div>
+
+    {% if articles %}
+        <div class="row">
+            {% for article in articles %}
+                <div class="col-md-6 mb-4">
+                    <div class="card article-card h-100 sentiment-{{ 'positive' if article['llm_evaluation'] == 'Up' else 'negative' if article['llm_evaluation'] == 'Down' else 'neutral' }}">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ url_for('article', article_id=article['id']) }}" class="text-decoration-none">
+                                    {{ article['title'] }}
+                                </a>
+                            </h5>
+                            
+                            {% if article['publication_date'] %}
+                                <h6 class="card-subtitle mb-2 text-muted">
+                                    {{ article['publication_date'].split('T')[0] }}
+                                </h6>
+                            {% endif %}
+                            
+                            <p class="card-text">{{ article['snippet'] }}</p>
+                            
+                            {% if article['llm_evaluation'] %}
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-{{ 'success' if article['llm_evaluation'] == 'Up' else 'danger' if article['llm_evaluation'] == 'Down' else 'secondary' }} me-2">
+                                        {{ article['llm_evaluation'] }}
+                                    </span>
+                                    {% if article['llm_confidence'] %}
+                                        <small class="text-muted">
+                                            Confidence: {{ '%.1f'|format(article['llm_confidence']|float) }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if article['llm_confidence'] %}
+                                    <div class="confidence-bar mt-2">
+                                        <div class="confidence-level" style="width: {{ article['llm_confidence']|float * 10 }}%"></div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ url_for('article', article_id=article['id']) }}" class="btn btn-sm btn-outline-primary">
+                                Read More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-center mt-4">
+            {{ pagination.links }}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No articles found. Try adjusting your search query.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // Add active class to current page in pagination
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPage = {{ pagination.page }};
+            const pageLinks = document.querySelectorAll('.pagination .page-link');
+            
+            pageLinks.forEach(link => {
+                const pageNum = parseInt(link.textContent);
+                if (pageNum === currentPage) {
+                    link.closest('.page-item').classList.add('active');
+                }
+            });
+        });
+    </script>
+{% endblock %}

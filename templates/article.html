@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article['title'] }} - Stock News Dashboard{% endblock %}
+
+{% block content %}
+    <article class="mb-5">
+        <div class="card">
+            <div class="card-body">
+                {% if article['llm_evaluation'] %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-{{ 'success' if article['llm_evaluation'] == 'Up' else 'danger' if article['llm_evaluation'] == 'Down' else 'secondary' }} fs-6">
+                            {{ article['llm_evaluation'] }}
+                        </span>
+                        {% if article['llm_confidence'] %}
+                            <div>
+                                <small class="text-muted me-2">Confidence:</small>
+                                <span class="fw-bold">{{ '%.1f'|format(article['llm_confidence']|float) }}/10</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <h1 class="card-title mb-3">{{ article['title'] }}</h1>
+                
+                <div class="d-flex flex-wrap gap-3 text-muted mb-4">
+                    {% if article['publication_date'] %}
+                        <div>
+                            <i class="far fa-calendar-alt me-1"></i>
+                            {{ article['publication_date'].split('T')[0] }}
+                        </div>
+                    {% endif %}
+                    {% if article['scraped_at'] %}
+                        <div>
+                            <i class="fas fa-database me-1"></i>
+                            Added: {{ article['scraped_at'].split('.')[0] }}
+                        </div>
+                    {% endif %}
+                    {% if article['url'] %}
+                        <div>
+                            <i class="fas fa-external-link-alt me-1"></i>
+                            <a href="{{ article['url'] }}" target="_blank" rel="noopener noreferrer">Original Source</a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if article['llm_reasoning'] %}
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-robot me-2"></i>Analysis</h5>
+                        <p class="mb-0">{{ article['llm_reasoning'] }}</p>
+                    </div>
+                {% endif %}
+                
+                <div class="article-content mt-4">
+                    {% if article['article_text'] %}
+                        {% for paragraph in article['article_text'].split('\n') %}
+                            {% if paragraph.strip() %}
+                                <p>{{ paragraph }}</p>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-warning">No content available for this article.</div>
+                    {% endif %}
+                </div>
+                
+                {% if article['attachments_text'] %}
+                    <div class="mt-4">
+                        <h5><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+                        <div class="attachments p-3 bg-light rounded">
+                            <pre style="white-space: pre-wrap; margin: 0;">{{ article['attachments_text'] }}</pre>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to List
+                </a>
+                {% if article['url'] %}
+                    <a href="{{ article['url'] }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt me-1"></i> View Original
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+    
+    <div class="d-flex justify-content-between mt-4">
+        {% if article['id'] > 1 %}
+            <a href="{{ url_for('article', article_id=article['id'] - 1) }}" class="btn btn-outline-primary">
+                <i class="fas fa-chevron-left me-1"></i> Previous Article
+            </a>
+        {% else %}
+            <span></span>
+        {% endif %}
+        
+        <a href="{{ url_for('article', article_id=article['id'] + 1) }}" class="btn btn-outline-primary">
+            Next Article <i class="fas fa-chevron-right ms-1"></i>
+        </a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // Add syntax highlighting or other client-side functionality if needed
+        document.addEventListener('DOMContentLoaded', function() {
+            // Any client-side interactivity can go here
+        });
+    </script>
+{% endblock %}

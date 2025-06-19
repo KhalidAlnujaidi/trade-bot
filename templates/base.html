@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Stock News Dashboard{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .article-card {
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+            height: 100%;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .sentiment-positive {
+            border-left: 4px solid #28a745;
+        }
+        .sentiment-negative {
+            border-left: 4px solid #dc3545;
+        }
+        .sentiment-neutral {
+            border-left: 4px solid #6c757d;
+        }
+        .confidence-bar {
+            height: 5px;
+            background-color: #e9ecef;
+            margin-top: 10px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .confidence-level {
+            height: 100%;
+            background-color: #17a2b8;
+        }
+        .search-form {
+            margin-bottom: 2rem;
+        }
+        .card {
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: 0.5rem;
+        }
+        .card-footer {
+            background-color: rgba(0,0,0,.03);
+            border-top: 1px solid rgba(0,0,0,.125);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Stock News Dashboard</h1>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+            </div>
+            <hr>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="mt-5 text-center text-muted">
+            <hr>
+            <p>Stock News Dashboard &copy; {{ now.year if now is defined else '2025' }} - Powered by Python Flask</p>
+        </footer>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block scripts %}
+    <!-- Custom scripts will be added by child templates -->
+    {% endblock %}
+</body>
+</html>
