@@ -58,20 +58,55 @@ DL_EXT_PATTERN = re.compile(r"\.(pdf|docx?|xlsx?|pptx?|zip)$", re.I)
 # ────────────────────────────────────────────────────────────────────────────────
 
 def build_driver(headless: bool = True) -> webdriver.Chrome:
-    opts = Options()
-    if headless:
-        opts.add_argument("--headless=new")
-    opts.add_argument(f"--user-agent={USER_AGENT}")
-    opts.add_argument("--disable-blink-features=AutomationControlled")
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
-    opts.add_experimental_option("useAutomationExtension", False)
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=opts)
-    driver.execute_cdp_cmd(
-        "Page.addScriptToEvaluateOnNewDocument",
-        {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
-    )
-    return driver
+    try:
+        opts = Options()
+        if headless:
+            opts.add_argument("--headless=new")
+        
+        # Common options
+        opts.add_argument(f"--user-agent={USER_AGENT}")
+        opts.add_argument("--disable-blink-features=AutomationControlled")
+        opts.add_argument('--no-sandbox')
+        opts.add_argument('--disable-dev-shm-usage')
+        opts.add_argument('--disable-gpu')
+        opts.add_argument('--window-size=1920,1080')
+        
+        # Experimental options
+        opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+        opts.add_experimental_option('useAutomationExtension', False)
+        
+        # Try to use Chrome if it's installed
+        from webdriver_manager.chrome import ChromeDriverManager
+        from webdriver_manager.core.os_manager import ChromeType
+        
+        # First try with Chrome, fall back to Chromium if needed
+        chrome_type = ChromeType.GOOGLE
+        try:
+            service = Service(ChromeDriverManager(chrome_type=chrome_type).install())
+        except:
+            chrome_type = ChromeType.CHROMIUM
+            service = Service(ChromeDriverManager(chrome_type=chrome_type).install())
+        
+        # Initialize the driver
+        driver = webdriver.Chrome(service=service, options=opts)
+        
+        # Hide WebDriver
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
+        )
+        
+        return driver
+        
+    except Exception as e:
+        error_msg = f"Error initializing Chrome WebDriver: {str(e)}"
+        print(error_msg)
+        print("\nTroubleshooting tips:")
+        print("1. Make sure Chrome browser is installed")
+        print("2. Try running 'brew install --cask google-chrome' if on macOS")
+        print("3. Check Chrome version matches ChromeDriver version")
+        raise RuntimeError(error_msg)
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Listing‑page helpers (No changes here)
