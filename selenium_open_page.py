@@ -30,13 +30,13 @@ import docx
 import openpyxl
 
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+
+from dotenv import load_dotenv
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -65,8 +65,7 @@ def build_driver(headless: bool = True) -> webdriver.Chrome:
     opts.add_argument("--disable-blink-features=AutomationControlled")
     opts.add_experimental_option("excludeSwitches", ["enable-automation"])
     opts.add_experimental_option("useAutomationExtension", False)
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=opts)
+    driver = webdriver.Chrome(options=opts)
     driver.execute_cdp_cmd(
         "Page.addScriptToEvaluateOnNewDocument",
         {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
@@ -324,10 +323,13 @@ def main(url: str, *, headless: bool = True, keep_open: bool = False) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python selenium_open_page.py <URL> [--show] [--keep]")
-        sys.exit(1)
-    target_url = sys.argv[1]
+    DEFAULT_URL = "https://www.saudiexchange.sa/wps/portal/saudiexchange/newsandreports"
     show_ui = "--show" in sys.argv
     hold_open = "--keep" in sys.argv
+    # Find the first argument that is not an option (does not start with --)
+    url_arg = next((arg for arg in sys.argv[1:] if not arg.startswith("--")), None)
+    target_url = url_arg if url_arg else DEFAULT_URL
     main(target_url, headless=not show_ui, keep_open=hold_open)
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
